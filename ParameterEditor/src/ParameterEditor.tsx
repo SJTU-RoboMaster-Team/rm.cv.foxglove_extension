@@ -1,77 +1,64 @@
-import { Immutable, MessageEvent, PanelExtensionContext, Topic } from "@foxglove/extension";
-import { ReactElement, useEffect, useLayoutEffect, useState } from "react";
+import { PanelExtensionContext } from "@foxglove/extension";
+import { ReactElement, useState } from "react";
 import { createRoot } from "react-dom/client";
 
-function ExamplePanel({ context }: { context: PanelExtensionContext }): ReactElement {
-  const [topics, setTopics] = useState<undefined | Immutable<Topic[]>>();
-  const [messages, setMessages] = useState<undefined | Immutable<MessageEvent[]>>();
+function ExamplePanel({  }: { context: PanelExtensionContext }): ReactElement {
+  // 远程文件内容的状态
+  const [fileContent, setFileContent] = useState<string>("");
 
-  const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
+  // 请根据实际情况修改远程设备上提供文件接口的 URL
+  const remoteFileUrl = "http://10.42.0.174:8000/edit-param";
 
-  // We use a layout effect to setup render handling for our panel. We also setup some topic subscriptions.
-  useLayoutEffect(() => {
-    // The render handler is run by the broader studio system during playback when your panel
-    // needs to render because the fields it is watching have changed. How you handle rendering depends on your framework.
-    // You can only setup one render handler - usually early on in setting up your panel.
-    //
-    // Without a render handler your panel will never receive updates.
-    //
-    // The render handler could be invoked as often as 60hz during playback if fields are changing often.
-    context.onRender = (renderState, done) => {
-      // render functions receive a _done_ callback. You MUST call this callback to indicate your panel has finished rendering.
-      // Your panel will not receive another render callback until _done_ is called from a prior render. If your panel is not done
-      // rendering before the next render call, studio shows a notification to the user that your panel is delayed.
-      //
-      // Set the done callback into a state variable to trigger a re-render.
-      setRenderDone(() => done);
+  // 通过 HTTP GET 请求读取远程文件内容
+  async function fetchRemoteFile() {
+    try {
+      const response = await fetch(remoteFileUrl);
+      if (!response.ok) {
+        throw new Error(`读取远程文件错误：${response.statusText}`);
+      }
+      const text = await response.text();
+      setFileContent(text);
+    } catch (error) {
+      console.error("读取远程文件失败", error);
+      alert("读取远程文件失败：" + error);
+    }
+  }
 
-      // We may have new topics - since we are also watching for messages in the current frame, topics may not have changed
-      // It is up to you to determine the correct action when state has not changed.
-      setTopics(renderState.topics);
-
-      // currentFrame has messages on subscribed topics since the last render call
-      setMessages(renderState.currentFrame);
-    };
-
-    // After adding a render handler, you must indicate which fields from RenderState will trigger updates.
-    // If you do not watch any fields then your panel will never render since the panel context will assume you do not want any updates.
-
-    // tell the panel context that we care about any update to the _topic_ field of RenderState
-    context.watch("topics");
-
-    // tell the panel context we want messages for the current frame for topics we've subscribed to
-    // This corresponds to the _currentFrame_ field of render state.
-    context.watch("currentFrame");
-
-    // subscribe to some topics, you could do this within other effects, based on input fields, etc
-    // Once you subscribe to topics, currentFrame will contain message events from those topics (assuming there are messages).
-    context.subscribe([{ topic: "/some/topic" }]);
-  }, [context]);
-
-  // invoke the done callback once the render is complete
-  useEffect(() => {
-    renderDone?.();
-  }, [renderDone]);
+  // 通过 HTTP PUT 请求保存修改后的远程文件内容
+  async function saveRemoteFile() {
+    try {
+      const response = await fetch(remoteFileUrl, {
+        method: "PUT", // 如果后端使用 POST，请修改这里为 "POST"
+        headers: {
+          "Content-Type": "text/plain",
+        },
+        body: fileContent,
+      });
+      if (!response.ok) {
+        throw new Error(`保存远程文件错误：${response.statusText}`);
+      }
+      alert("保存远程文件成功！");
+    } catch (error) {
+      console.error("保存远程文件失败", error);
+      alert("保存远程文件失败：" + error);
+    }
+  }
 
   return (
     <div style={{ padding: "1rem" }}>
-      <h2>Welcome to your new extension panel!</h2>
-      <p>
-        Check the{" "}
-        <a href="https://foxglove.dev/docs/studio/extensions/getting-started">documentation</a> for
-        more details on building extension panels for Foxglove Studio.
-      </p>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "0.2rem" }}>
-        <b style={{ borderBottom: "1px solid" }}>Topic</b>
-        <b style={{ borderBottom: "1px solid" }}>Schema name</b>
-        {(topics ?? []).map((topic) => (
-          <>
-            <div key={topic.name}>{topic.name}</div>
-            <div key={topic.schemaName}>{topic.schemaName}</div>
-          </>
-        ))}
+      <h3>远程 TOML 文件编辑器</h3>
+      <div style={{ marginBottom: "1rem" }}>
+        <button onClick={fetchRemoteFile}>读取远程文件</button>
       </div>
-      <div>{messages?.length}</div>
+      <textarea
+        value={fileContent}
+        onChange={(e) => setFileContent(e.target.value)}
+        placeholder="远程文件内容将在此显示……"
+        style={{ width: "100%", height: "200px", fontFamily: "monospace" }}
+      />
+      <div style={{ marginTop: "0.5rem" }}>
+        <button onClick={saveRemoteFile}>保存修改到远程</button>
+      </div>
     </div>
   );
 }
@@ -79,8 +66,7 @@ function ExamplePanel({ context }: { context: PanelExtensionContext }): ReactEle
 export function initExamplePanel(context: PanelExtensionContext): () => void {
   const root = createRoot(context.panelElement);
   root.render(<ExamplePanel context={context} />);
-
-  // Return a function to run when the panel is removed
+  // 当面板移除时卸载 React 根节点
   return () => {
     root.unmount();
   };
