@@ -2,86 +2,202 @@ import { PanelExtensionContext } from "@foxglove/extension";
 import { ReactElement, useState } from "react";
 import { createRoot } from "react-dom/client";
 
-function ExamplePanel({  }: { context: PanelExtensionContext }): ReactElement {
-  // 远程文件内容的状态
-  const [fileContent, setFileContent] = useState<string>("");
+interface TomlLine {
+  type: "section" | "param" | "comment" | "other";
+  raw: string;
+  indent?: string;
+  key?: string;
+  value?: string;
+  comment?: string;
+  section?: string;
+}
 
-  // 请根据实际情况修改远程设备上提供文件接口的 URL
-  const remoteFileUrl = "http://10.42.0.174:8000/edit-param-raw";
+function ParameterEditor({}: { context: PanelExtensionContext }): ReactElement {
+  const [serverAddress, setServerAddress] = useState("10.42.0.174:8000");
+  const [tomlLines, setTomlLines] = useState<TomlLine[]>([]);
 
-  // 通过 HTTP GET 请求读取远程文件内容
-  async function fetchRemoteFile() {
+  const remoteFileUrl = `http://${serverAddress}/edit-param-raw`;
+
+  // 解析TOML内容，保留注释
+  const parseTomlContent = (content: string): TomlLine[] => {
+    return content.split("\n").map((line) => {
+      const trimmed = line.trim();
+
+      if (trimmed.startsWith("#")) {
+        return { type: "comment", raw: line };
+      }
+
+      if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+        return { type: "section", raw: line, section: trimmed.slice(1, -1).trim() };
+      }
+
+      const paramMatch = line.match(/^(\s*)([^=#]+)=\s*([^#]*?)(\s*(#.*)?)$/);
+      if (paramMatch) {
+        const [, indent, key, value, , comment] = paramMatch;
+        return {
+          type: "param",
+          raw: line,
+          indent: indent || "",
+          key: key?.trim() || "",
+          value: value?.trim() || "",
+          comment: comment?.trim(),
+        };
+      }
+
+      return { type: "other", raw: line };
+    });
+  };
+
+  // 生成TOML内容时保留注释
+  const generateTomlContent = (lines: TomlLine[]): string => {
+    return lines.map((line) => line.raw).join("\n"); // 直接返回解析时的原始行，保证注释不丢失
+  };
+
+  // 获取远程文件
+  const fetchRemoteFile = async () => {
     try {
       const response = await fetch(remoteFileUrl);
-      if (!response.ok) {
-        throw new Error(`读取远程文件错误：${response.statusText}`);
-      }
       const text = await response.text();
-      setFileContent(text);
+      setTomlLines(parseTomlContent(text));
     } catch (error) {
-      console.error("读取远程文件失败", error);
+      console.error("读取文件失败", error);
       alert("读取远程文件失败：" + error);
     }
-  }
+  };
 
-  // 通过 HTTP PUT 请求保存修改后的远程文件内容
-  async function saveRemoteFile() {
-    const newData = fileContent; // 获取用户编辑的内容
+  // 参数修改处理
+  const handleParamChange = (index: number, newValue: string) => {
+    const updated = [...tomlLines];
+    if (updated[index] && updated[index].type === "param") {
+      updated[index].value = newValue;
+      updated[index].raw = `${updated[index].indent}${updated[index].key} = ${newValue}${updated[index].comment ? ` ${updated[index].comment}` : ""}`;
+      setTomlLines(updated);
+    }
+  };
 
-    // 创建 XMLHttpRequest 对象
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "http://10.42.0.174:8000/edit-param/post", true);
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+  // 保存文件
+  const saveRemoteFile = async () => {
+    const newContent = generateTomlContent(tomlLines);
+    try {
+      const response = await fetch(`http://${serverAddress}/edit-param/post`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "new-data=" + encodeURIComponent(newContent),
+      });
+      if (!response.ok) throw new Error("保存失败");
+      alert("保存成功");
+    } catch (error) {
+      console.error("保存失败", error);
+      alert("保存失败：" + error);
+    }
+  };
 
-    // 设置请求完成后的处理程序
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === XMLHttpRequest.DONE) {
-        const feedback = document.getElementById("feedback-log") as HTMLTextAreaElement;
-        if (xhr.status === 200) {
-          // 成功处理请求
-          if (feedback) {
-            feedback.value += `[INFO] 成功发送了文件更新请求。\n`;
-            feedback.scrollTop = feedback.scrollHeight;
-          }
-          alert("保存远程文件成功！");
-        } else {
-          // 失败处理
-          if (feedback) {
-            feedback.value += `[ERROR] 保存远程文件失败：${xhr.statusText}\n`;
-            feedback.scrollTop = feedback.scrollHeight;
-          }
-          alert("保存远程文件失败：" + xhr.statusText);
-        }
-      }
-    };
+  // 渲染参数输入框
+  const renderInput = (line: TomlLine, index: number) => {
+    if (line.type !== "param") return null;
 
-    // 发送更新数据
-    xhr.send("new-data=" + encodeURIComponent(newData));
-  }
+    const value = line.value ?? "";
+    const isBoolean = value === "true" || value === "false";
+
+    return (
+      <div
+        key={index}
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "8px",
+          marginBottom: "8px",
+          width: "100%",
+        }}
+      >
+        {/* 左侧参数名 */}
+        <span style={{ flex: 1, wordBreak: "break-word", whiteSpace: "normal" }}>
+          {line.key}
+        </span>
+
+        {/* 右侧输入框或复选框 */}
+        {isBoolean ? (
+          <input
+            type="checkbox"
+            checked={value === "true"}
+            onChange={(e) => handleParamChange(index, e.target.checked ? "true" : "false")}
+            style={{
+              marginLeft: "auto",
+              transform: "scale(1.2)",
+            }}
+          />
+        ) : (
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => handleParamChange(index, e.target.value)}
+            style={{
+              width: "150px",
+              marginLeft: "auto",
+              textAlign: "left",
+              paddingLeft: "8px",
+            }}
+          />
+        )}
+      </div>
+    );
+  };
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <h3>远程 TOML 文件编辑器</h3>
-      <div style={{ marginBottom: "1rem" }}>
-        <button onClick={fetchRemoteFile}>读取远程文件</button>
+    <div style={{ padding: "16px", height: "100%", display: "flex", flexDirection: "column" }}>
+      {/* 服务器地址输入框 */}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+        <span>服务器地址:</span>
+        <input
+          type="text"
+          value={serverAddress}
+          onChange={(e) => setServerAddress(e.target.value)}
+          style={{ width: "200px", textAlign: "left", paddingLeft: "8px" }}
+        />
       </div>
-      <pre
-        style={{ width: "100%", height: "200px", fontFamily: "monospace", overflow: "auto", whiteSpace: "pre-wrap", border: "1px solid #ccc", padding: "0.5rem" }}
-      >
-        <code contentEditable="true">{fileContent}</code>
-      </pre>
-      <div style={{ marginTop: "0.5rem" }}>
-        <button onClick={saveRemoteFile}>保存修改到远程</button>
+
+      {/* 操作按钮 */}
+      <div style={{ marginBottom: "16px", display: "flex", gap: "8px" }}>
+        <button onClick={fetchRemoteFile}>读取文件</button>
+        <button onClick={saveRemoteFile}>保存修改</button>
+      </div>
+
+      {/* 参数列表 */}
+      <div style={{ flex: 1, overflowY: "auto", paddingRight: "8px" }}>
+        {tomlLines.map((line, index) => {
+          if (line.type === "section") {
+            return (
+              <div key={index} style={{ marginTop: "16px" }}>
+                <h4
+                  style={{
+                    backgroundColor: "#f0f0f0",
+                    padding: "8px",
+                    borderRadius: "4px",
+                    margin: "8px 0",
+                  }}
+                >
+                  [{line.section}]
+                </h4>
+              </div>
+            );
+          }
+          if (line.type === "comment") {
+            return (
+              <div key={index} style={{ color: "gray", fontStyle: "italic", marginBottom: "4px" }}>
+                {line.raw}
+              </div>
+            );
+          }
+          return renderInput(line, index);
+        })}
       </div>
     </div>
   );
 }
 
-export function initExamplePanel(context: PanelExtensionContext): () => void {
+export function initParameterEditor(context: PanelExtensionContext): () => void {
   const root = createRoot(context.panelElement);
-  root.render(<ExamplePanel context={context} />);
-  // 当面板移除时卸载 React 根节点
-  return () => {
-    root.unmount();
-  };
+  root.render(<ParameterEditor context={context} />);
+  return () => root.unmount();
 }
