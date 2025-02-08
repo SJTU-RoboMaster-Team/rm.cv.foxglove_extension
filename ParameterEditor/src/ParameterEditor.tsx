@@ -13,7 +13,7 @@ interface TomlLine {
 }
 
 function ParameterEditor({}: { context: PanelExtensionContext }): ReactElement {
-  const [serverAddress, setServerAddress] = useState("10.42.0.174:8000");
+  const [serverAddress, setServerAddress] = useState("localhost:8000");
   const [tomlLines, setTomlLines] = useState<TomlLine[]>([]);
 
   const remoteFileUrl = `http://${serverAddress}/edit-param-raw`;

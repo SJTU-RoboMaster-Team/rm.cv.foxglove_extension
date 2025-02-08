@@ -1,0 +1,207 @@
+{
+  "configById": {
+    "ParameterEditor.ParameterEditor!yow281": {},
+    "JsonMessageViewer.JsonMessageViewer!4k8m78v": {},
+    "3D!4bho3e7": {
+      "cameraState": {
+        "perspective": true,
+        "distance": 3.1555842957598617,
+        "phi": 45.97141389335289,
+        "thetaOffset": -175.8678474995847,
+        "targetOffset": [
+          -0.19418636800318168,
+          -0.8627025084747779,
+          -5.516365346190946e-18
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "targetOrientation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "fovy": 45,
+        "near": 0.5,
+        "far": 5000
+      },
+      "followMode": "follow-position",
+      "scene": {},
+      "transforms": {},
+      "topics": {
+        "/decision/map_targets": {
+          "visible": false
+        },
+        "/enemy_position": {
+          "visible": true
+        },
+        "/initialpose": {
+          "visible": false
+        },
+        "/energy_debug_img_aim": {
+          "visible": false
+        }
+      },
+      "layers": {
+        "grid": {
+          "visible": true,
+          "frameLocked": true,
+          "label": "Grid",
+          "instanceId": "958456a8-545e-4f5e-95bb-77fcbdefe378",
+          "layerId": "foxglove.Grid",
+          "size": 10,
+          "divisions": 10,
+          "lineWidth": 1,
+          "color": "#248eff",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "publish": {
+        "type": "point",
+        "poseTopic": "/move_base_simple/goal",
+        "pointTopic": "/clicked_point",
+        "poseEstimateTopic": "/initialpose",
+        "poseEstimateXDeviation": 0.5,
+        "poseEstimateYDeviation": 0.5,
+        "poseEstimateThetaDeviation": 0.26179939
+      },
+      "imageMode": {},
+      "followTf": "world"
+    },
+    "Plot!3dncjau": {
+      "paths": [
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/enemy_radius.data[1]",
+          "enabled": true,
+          "color": "#f5774d"
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/enemy_radius.data[0]",
+          "enabled": true,
+          "color": "#4e98e2"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Image!3mnp456": {
+      "cameraState": {
+        "distance": 20,
+        "perspective": true,
+        "phi": 60,
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "targetOffset": [
+          0,
+          0,
+          0
+        ],
+        "targetOrientation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "thetaOffset": 45,
+        "fovy": 45,
+        "near": 0.5,
+        "far": 5000
+      },
+      "followMode": "follow-pose",
+      "scene": {},
+      "transforms": {},
+      "topics": {},
+      "layers": {},
+      "publish": {
+        "type": "point",
+        "poseTopic": "/move_base_simple/goal",
+        "pointTopic": "/clicked_point",
+        "poseEstimateTopic": "/initialpose",
+        "poseEstimateXDeviation": 0.5,
+        "poseEstimateYDeviation": 0.5,
+        "poseEstimateThetaDeviation": 0.26179939
+      },
+      "imageMode": {
+        "imageTopic": "/autoaim_debug_img_aim"
+      }
+    },
+    "RawMessages!6ycljt": {
+      "diffEnabled": false,
+      "diffMethod": "custom",
+      "diffTopicPath": "",
+      "showFullMessageForDiff": false,
+      "topicPath": "/enemy_position",
+      "fontSize": 12,
+      "expansion": {
+        "armor2": "e",
+        "armor1": "e",
+        "pose~armor1": "e",
+        "header~armor1": "c",
+        "orientation~pose~armor1": "c",
+        "position~pose~armor1": "e",
+        "header~armor2": "c",
+        "pose~armor2": "e",
+        "position~pose~armor2": "e",
+        "armor3": "e",
+        "header~armor3": "c",
+        "stamp~header~armor3": "e",
+        "pose~armor3": "e",
+        "position~pose~armor3": "e"
+      }
+    }
+  },
+  "globalVariables": {
+    "globalVariable": 6
+  },
+  "userNodes": {},
+  "playbackConfig": {
+    "speed": 1
+  },
+  "layout": {
+    "direction": "row",
+    "first": {
+      "first": "ParameterEditor.ParameterEditor!yow281",
+      "second": "JsonMessageViewer.JsonMessageViewer!4k8m78v",
+      "direction": "column"
+    },
+    "second": {
+      "direction": "row",
+      "first": {
+        "first": "3D!4bho3e7",
+        "second": "Plot!3dncjau",
+        "direction": "column",
+        "splitPercentage": 51.71470507272324
+      },
+      "second": {
+        "first": "Image!3mnp456",
+        "second": "RawMessages!6ycljt",
+        "direction": "column",
+        "splitPercentage": 39.24889588694966
+      }
+    },
+    "splitPercentage": 26.586749979634604
+  }
+}
