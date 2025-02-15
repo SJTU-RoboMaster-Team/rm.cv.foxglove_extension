@@ -62,7 +62,6 @@ function ParameterEditor({}: { context: PanelExtensionContext }): ReactElement {
             setSaveStatus(null);
         } catch (error) {
             console.error("读取文件失败", error);
-            alert("读取远程文件失败：" + error);
             setReadStatus("读取失败");
             setSaveStatus(null);
         }
@@ -168,7 +167,10 @@ function ParameterEditor({}: { context: PanelExtensionContext }): ReactElement {
                 searchInput.focus();
             } else if (e.key === 'r') {
                 e.preventDefault();
-                fetchRemoteFile();
+                const readButton = document.getElementById('read-button');
+                if (readButton) {
+                    readButton.click();
+                }
             } else if (e.key === 's') {
                 e.preventDefault();
                 const saveButton = document.getElementById('save-button');
@@ -309,7 +311,7 @@ function ParameterEditor({}: { context: PanelExtensionContext }): ReactElement {
                 )}
             </div>
             <div style={{ marginBottom: "16px", display: "flex", gap: "8px", alignItems: "center" }}>
-                <button onClick={fetchRemoteFile}>读取文件</button>
+                <button id="read-button" onClick={fetchRemoteFile}>读取文件</button>
                 <button id="save-button" onClick={saveRemoteFile}>保存修改</button>
                 {saveStatus && (
                     <span
