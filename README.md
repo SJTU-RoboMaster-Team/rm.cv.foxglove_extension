@@ -51,36 +51,36 @@
 
 #### 安装扩展
  
- 1. 下载最新[Releases](https://github.com/yyyyymzzzzz/foxglove_extension)并解压。
+ 1. 下载最新[Releases](https://github.com/yyyyymzzzzz/foxglove_extension/releases/tag/v1.0)并解压。
  2. 打开`Foxglove`并进入`Setting`,选择`Extensions`选项，点击`Install local extension...`，选择逐一选择**Releases**中所有的`.foxe`即可完成安装。    
 
 ## 文件目录说明
 
 ```
-├── Autoaim-ros2.json 自定义面板布局，可在Foxglove中直接导入
-├── install_foxglove.sh 自动安装脚本，如果有配置Yarn工具可快速本地安装
+├── Autoaim-ros2.json                     # 自定义面板布局，可在Foxglove中直接导入
+├── install_foxglove.sh                   # 自动安装脚本，如果有配置Yarn工具可快速本地安装
 ├── JsonMessageViewer
 │   ├── package.json
 │   ├── src
 │   │   ├── index.ts
-│   │   └── JsonMessageViewer.tsx 自定义扩展实现
-│   └── ymz.JsonMessageViewer-1.0.foxe 最新版本安装包
+│   │   └── JsonMessageViewer.tsx         # 自定义扩展实现
+│   └── ymz.JsonMessageViewer-1.0.foxe    # 最新版本安装包
 ├── MessageConverter
 │   ├── package.json
 │   ├── src
-│   │   ├── EnemyInfo.ts 自定义消息类型
+│   │   ├── EnemyInfo.ts                  # 自定义消息类型
 │   │   ├── ExamplePanel.tsx 
-│   │   ├── index.ts 自定义扩展实现
+│   │   ├── index.ts                      # 自定义扩展实现
 │   │   └── PoseStamped.ts
 │   ├── ymz.MessageConverter-1.0.foxe
-│   └── ymz.MessageConverter-1.1.foxe 最新版本安装包
+│   └── ymz.MessageConverter-1.1.foxe     # 最新版本安装包
 ├── ParameterEditor
 │   ├── package.json
 │   ├── src
 │   │   ├── index.ts
-│   │   └── ParameterEditor.tsx 自定义扩展实现
+│   │   └── ParameterEditor.tsx           # 自定义扩展实现
 │   ├── ymz.ParameterEditor-1.0.foxe
-│   └── ymz.ParameterEditor-1.1.foxe 最新版本安装包
+│   └── ymz.ParameterEditor-1.1.foxe      # 最新版本安装包
 └── README.md
 
 ```
