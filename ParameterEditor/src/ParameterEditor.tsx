@@ -58,6 +58,11 @@ function ParameterEditor({}: { context: PanelExtensionContext }): ReactElement {
             const response = await fetch(remoteFileUrl);
             const text = await response.text();
             setTomlLines(parseTomlContent(text));
+            if (!text.trim()) {
+                setReadStatus("文件内容为空");
+                setSaveStatus(null);
+                throw new Error("文件内容为空");
+            }
             setReadStatus("读取成功");
             setSaveStatus(null);
         } catch (error) {
@@ -160,6 +165,9 @@ function ParameterEditor({}: { context: PanelExtensionContext }): ReactElement {
     };
 
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
+        if (e.key === '[' || e.key === '\\'){
+            e.preventDefault();
+        }
         if (e.ctrlKey) {
             if (e.key === 'f') {
                 e.preventDefault();

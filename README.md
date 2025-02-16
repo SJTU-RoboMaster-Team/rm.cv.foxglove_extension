@@ -80,7 +80,8 @@
 │   │   ├── index.ts
 │   │   └── ParameterEditor.tsx           # 自定义扩展实现
 │   ├── ymz.ParameterEditor-1.0.foxe
-│   └── ymz.ParameterEditor-1.1.foxe      # 最新版本安装包
+│   ├── ymz.ParameterEditor-1.1.foxe
+│   └── ymz.ParameterEditor-1.1.1.foxe      # 最新版本安装包
 └── README.md
 
 ```
